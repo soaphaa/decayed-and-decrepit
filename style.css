@@ -1,15 +1,22 @@
-<<<<<<< Updated upstream
-=======
 body {
     font-family: Arial, sans-serif;
     text-align: center;
     margin-top: 50px;
 }
 
+
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: #ececec;
+}
+
 canvas#gameCanvas {
     border: 1px solid #333;
-    display: block;
-    margin: 20px auto;
     background-color: #fafafa;
 }
->>>>>>> Stashed changes
+
+
