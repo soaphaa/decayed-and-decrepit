@@ -20,7 +20,7 @@ window.addEventListener('DOMContentLoaded', () => {
     ];
 
     // Which character is active: 0 = jason (indices 0,1), 1 = valerie (indices 2,3)
-    // Change this to 1 to switch to Valerie
+    // Set by the character selection screen before the game starts
     let activeCharacter = 0;
 
     // Returns the correct PLAYER_DIRS index for the current character and angle.
@@ -39,6 +39,8 @@ window.addEventListener('DOMContentLoaded', () => {
     // Sprites face RIGHT in the image (0 degrees).
     const SPRITES = {
         zombie: { src: 'assets/zombie.png', img: null, loaded: false },
+        background: { src: 'assets/background.png', img: null, loaded: false }, // canvas background
+
     };
 
     // Loads all sprites and returns a Promise that resolves when every image has either loaded or errored.
@@ -131,23 +133,42 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // HUD ELEMENTS (Heads up display)
     // HUD elements (may be missing in lightweight builds)
-    const hpEl          = document.getElementById('hpVal');
-    const levelEl       = document.getElementById('levelVal');
-    const killsEl       = document.getElementById('killsVal');
-    const totalEl       = document.getElementById('totalVal');
-    const scoreEl       = document.getElementById('scoreVal');
-    const gameOverEl    = document.getElementById('gameOver');
-    const finalScoreEl  = document.getElementById('finalScore');
-    const lvlCompleteEl = document.getElementById('levelComplete');
-    const lvlTitleEl    = document.getElementById('levelCompleteTitle');
-    const pauseScreenEl   = document.getElementById('pauseScreen');
-    const gameCompleteEl  = document.getElementById('gameComplete');
+    const hpEl               = document.getElementById('hpVal');
+    const levelEl            = document.getElementById('levelVal');
+    const killsEl            = document.getElementById('killsVal');
+    const totalEl            = document.getElementById('totalVal');
+    const scoreEl            = document.getElementById('scoreVal');
+    const gameOverEl         = document.getElementById('gameOver');
+    const finalScoreEl       = document.getElementById('finalScore');
+    const lvlCompleteEl      = document.getElementById('levelComplete');
+    const lvlTitleEl         = document.getElementById('levelCompleteTitle');
+    const pauseScreenEl      = document.getElementById('pauseScreen');
+    const gameCompleteEl     = document.getElementById('gameComplete');
+    const characterSelectEl  = document.getElementById('characterSelection'); // shown on load
+
+    // CHARACTER SELECTION — shown immediately when page loads, before anything else.
+    // Clicking a button sets activeCharacter and starts the game.
+    const jasonBtn   = document.getElementById('JasonButton');
+    const valerieBtn = document.getElementById('ValerieButton');
+
+    if (jasonBtn) jasonBtn.addEventListener('click', () => {
+        activeCharacter = 0; // jason uses PLAYER_DIRS indices 0 and 1
+        if (characterSelectEl) characterSelectEl.classList.remove('show');
+        initGame();
+    });
+
+    if (valerieBtn) valerieBtn.addEventListener('click', () => {
+        activeCharacter = 1; // valerie uses PLAYER_DIRS indices 2 and 3
+        if (characterSelectEl) characterSelectEl.classList.remove('show');
+        initGame();
+    });
 
     // Only attach listeners if the buttons exist (prevents runtime errors)
     const restartBtn = document.getElementById('restartBtn');
     if (restartBtn) restartBtn.addEventListener('click', () => {
         if (gameOverEl) gameOverEl.classList.remove('show');
-        initGame();
+        // Return to character selection instead of restarting directly
+        if (characterSelectEl) characterSelectEl.classList.add('show');
     });
 
     const nextLevelBtn = document.getElementById('nextLevelBtn');
@@ -155,20 +176,6 @@ window.addEventListener('DOMContentLoaded', () => {
         if (lvlCompleteEl) lvlCompleteEl.classList.remove('show');
         advanceLevel();
     });
-
-    document.getElementById('JasonButton').addEventListener('click', () => {
-        player.character = 'Jason';
-        if (characterSelectionEl) characterSelectionEl.classList.remove('show');
-        initGame();
-    });
-
-
-    document.getElementById('ValerieButton').addEventListener('click', () => {
-        player.character = 'Valerie';
-        if (characterSelectionEl) characterSelectionEl.classList.remove('show');
-        initGame();
-    });
-
 
     // Resume button on the pause screen — also works with ESC
     const resumeBtn = document.getElementById('resumeBtn');
@@ -181,7 +188,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const restartButton = document.getElementById('restartButton');
     if (restartButton) restartButton.addEventListener('click', () => {
         if (gameCompleteEl) gameCompleteEl.classList.remove('show');
-        initGame();
+        // Return to character selection on win screen restart too
+        if (characterSelectEl) characterSelectEl.classList.add('show');
     });
 
     const quitButton = document.getElementById('quitButton');
@@ -244,7 +252,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // ZOMBIES
     let zombies = [];
-
 
     function spawnZombie() {
         const x = -30;
@@ -547,6 +554,11 @@ window.addEventListener('DOMContentLoaded', () => {
     // If you comment out a draw function, remove its call here too.
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const bg = SPRITES.background;
+        if (bg.loaded && bg.img) {
+            ctx.drawImage(bg.img, 0, 0, canvas.width, canvas.height);
+        }
         // drawSpawnEdge();
         // drawTarget();
         drawZombies();
@@ -562,12 +574,13 @@ window.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(loop);
     }
 
-    // Load sprites first, then start the game loop. Game will still start if some
-    // sprites fail to load — placeholders are shown until images are available.
+    // Load sprites first, then show the character selection screen.
+    // initGame() is NOT called here — it waits for the player to pick a character.
     loadSprites().then(results => {
         const failed = results.filter(r => !r.ok).map(r => r.key);
         if (failed.length) console.warn('Some sprites failed to load:', failed);
-        initGame();
-        loop();
+        // Show character selection immediately — game hasn't started yet
+        if (characterSelectEl) characterSelectEl.classList.add('show');
+        loop(); // loop runs but update() returns early since gameRunning = false
     });
 });

@@ -70,7 +70,7 @@ canvas#gameCanvas {
     flex-direction: column;
     gap: 40px; /* More space between title and character selection */
     z-index: 20;
-    background: rgba(10, 30, 10, 0.92);
+    background: rgba(119, 28, 28, 0.793);
     padding: 30px;
     padding-top: 50px; /* Increased top padding to push title up */
 }
@@ -82,7 +82,7 @@ canvas#gameCanvas {
 
 
 #characterSelection h2 {
-    color: #ffdd55;
+    color: #ffcc01;
     font-size: 3rem;
     letter-spacing: 0.2em;
         text-shadow: 0 0 30px rgba(255, 220, 50, 0.7);
@@ -121,10 +121,11 @@ canvas#gameCanvas {
 
 .character button {
     background-color: #ffdd55;
-    color: #333;
+    color: #000000;
     border: none;
     padding: 12px 24px;
-    font-size: 1rem;
+    font-size: 1.5rem;
+    letter-spacing: 0.15em;
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s ease;
@@ -134,7 +135,9 @@ canvas#gameCanvas {
 
 
 .character button:hover {
-    background-color: #e5c13b;
+    background: #dccf14;
+    color: #0d0202;
+    box-shadow: 0 0 24px rgba(225, 207, 11, 0.7);
 }
 
 
