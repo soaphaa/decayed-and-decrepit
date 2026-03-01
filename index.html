@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Top-down Movement</title>
+    <title>Top-down Shooter</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <script src="script.js"></script>
-
+    
     <div id="hud">
         <span>HP: <span id="hpVal">100</span></span>
-        <span>ZOMBIES: <span id="zombieCount">0</span></span>
-        <span>WAVE: <span id="waveVal">1</span></span>
+        <span>LEVEL: <span id="levelVal">1</span></span>
+        <span>KILLS: <span id="killsVal">0</span> / <span id="totalVal">0</span></span>
         <span>SCORE: <span id="scoreVal">0</span></span>
     </div>
-
-    <div id="controls">WASD — move &nbsp;|&nbsp; ARROW KEYS — rotate &nbsp;|&nbsp; SPACE — attack</div>
-
+    
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <div id="controls">WASD — move &nbsp;|&nbsp; ARROW KEYS — rotate &nbsp;|&nbsp; SPACE — shoot</div>
+    
     <div id="levelComplete">
         <h2 id="levelCompleteTitle">LEVEL CLEAR</h2>
         <p>All zombies eliminated</p>
@@ -31,5 +31,12 @@
         <button id="restartBtn">PLAY AGAIN</button>
     </div>
 
+    <div id="pauseScreen">
+        <h2>PAUSED</h2>
+        <p>Game is paused</p>
+        <button id="resumeBtn">RESUME</button>
+    </div>
+    
+    <script src="script.js"></script>
 </body>
 </html>

@@ -1,25 +1,67 @@
-
 window.addEventListener('DOMContentLoaded', () => {
 
     const canvas = document.getElementById('gameCanvas');
     const ctx    = canvas.getContext('2d');
 
+    // ============================================================
+    // PLAYER DIRECTIONAL SPRITES — 2 directions (left and right)
+    //
+    // The player sprite swaps between two PNGs based on angle:
+    //   jasonRight.png  — shown when facing right (315°–360° and 0°–135°)
+    //   jasonLeft.png   — shown when facing left  (135°–315°)
+    //
+    // No canvas rotation is applied — direction is baked into the image.
+    // ============================================================
+    const PLAYER_DIRS = [
+        { src: 'assets/jasonRight.png', img: null, loaded: false },  // index 0 — right
+        { src: 'assets/jasonLeft.png',  img: null, loaded: false },  // index 1 — left
+    ];
+
+    // Returns 0 (right sprite) or 1 (left sprite) based on player angle.
+    // "Left" is any angle pointing into the left half of the circle (90°–270°).
+    function getPlayerDirIndex(angle) {
+        // Normalise to 0–2PI so negative angles work correctly
+        const normalised = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        // PI/2 = 90°, 3*PI/2 = 270° — if between these, player faces left
+        return (normalised > Math.PI / 2 && normalised < Math.PI * 1.5) ? 1 : 0;
+    }
+
     // SPRITE CONFIGURATION
     // Sprites face RIGHT in the image (0 degrees).
     const SPRITES = {
-        player: { src: 'assets/jason.png', img: null, loaded: false },
-        zombie: { src: 'assets/jason.png', img: null, loaded: false },
+        zombie: { src: 'assets/jasonRight.png', img: null, loaded: false },
     };
 
     // Loads all sprites and returns a Promise that resolves when every image has either loaded or errored.
     function loadSprites() {
-        const jobs = Object.entries(SPRITES).map(([key, sprite]) => new Promise(resolve => {
+        // Combine player directional sprites and zombie sprite into one list
+        const allSprites = [
+            ...PLAYER_DIRS.map((s, i) => ({ key: 'player_dir_' + i, sprite: s })),
+            ...Object.entries(SPRITES).map(([key, s]) => ({ key, sprite: s })),
+        ];
+
+        const jobs = allSprites.map(({ key, sprite }) => new Promise(resolve => {
             const image = new Image();
             image.onload  = () => { sprite.img = image; sprite.loaded = true; resolve({ key, ok: true }); };
             image.onerror = () => { console.error('Could not load: ' + sprite.src); resolve({ key, ok: false }); };
             image.src = sprite.src;
         }));
         return Promise.all(jobs);
+    }
+
+    // Draws a player sprite — no rotation, direction is baked into the PNG
+    function drawSpriteFlat(sprite, x, y, radius, placeholderColor) {
+        const size = radius * 2;
+        ctx.save();
+        ctx.translate(x, y);
+        if (sprite.loaded && sprite.img) {
+            ctx.drawImage(sprite.img, -radius, -radius, size, size);
+        } else {
+            // Temporary placeholder — disappears once the PNG loads
+            ctx.fillStyle = placeholderColor;
+            ctx.fillRect(-radius, -radius, size, size);
+        }
+        ctx.restore();
     }
 
     // Draws a PNG sprite centred at (x, y), rotated to `angle`, sized radius*2.
@@ -41,7 +83,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // LEVEL CONFIGURATION
     // zombieCount   — total zombies that MUST be killed to clear the level
-    // spawnInterval — frames between spawns (60 ≈ 1 second at 60fps)
+    // spawnInterval — frames between spawns 
     const LEVELS = [
         { zombieCount: 3,  spawnInterval: 180 },
         { zombieCount: 6,  spawnInterval: 150 },
@@ -79,8 +121,8 @@ window.addEventListener('DOMContentLoaded', () => {
     // Adjust radius to scale the player sprite up or down.
     const player = {
         x:             canvas.width  / 2,
-        y:             canvas.height / 3,
-        radius:        24,
+        y:             canvas.height / 2,
+        radius:        36,
         speed:         3,
         angle:         0,
         rotationSpeed: 0.05,
@@ -93,6 +135,10 @@ window.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('keydown', e => {
         keys[e.key] = true;
         if (e.code === 'Space') { e.preventDefault(); shoot(); }
+        // Escape toggles pause — only works when the game is actively running
+        if (e.code === 'Escape' && gameRunning) {
+            gamePaused = !gamePaused;
+        }
     });
     window.addEventListener('keyup', e => { keys[e.key] = false; });
 
@@ -119,7 +165,6 @@ window.addEventListener('DOMContentLoaded', () => {
     };
 
     // ZOMBIES
-    // Adjust radius to scale the zombie sprite up or down.
     let zombies = [];
 
     function spawnZombie() {
@@ -131,12 +176,8 @@ window.addEventListener('DOMContentLoaded', () => {
             speed:            0.8 + Math.random() * 0.6,
             hp:               60,
             maxHp:            60,
-            detectionRadius:  180,
             separationRadius: 30,
-            wanderAngle:      0,
-            wanderTimer:      0,
-            bobT:             Math.random() * Math.PI * 2,
-            damageCooldown:   0,
+            damageCooldown:   120, // grace period so zombie can't hit player before entering screen
             flashT:           0,
             angle:            0,
         });
@@ -149,6 +190,7 @@ window.addEventListener('DOMContentLoaded', () => {
     let spawnTimer     = 0;
     let score          = 0;
     let gameRunning    = false;
+    let gamePaused     = false;
 
     function initGame() {
         player.x     = canvas.width  / 2;
@@ -159,8 +201,9 @@ window.addEventListener('DOMContentLoaded', () => {
         score        = 0;
         zombies      = [];
         bullets      = [];
-        target       = { x: 450, y: 200, width: 60, height: 60, health: 100, alive: true };
+        //target       = { x: 450, y: 200, width: 60, height: 60, health: 100, alive: true };
         gameRunning  = true;
+        gamePaused   = false;
         startLevel(currentLevel);
     }
 
@@ -197,7 +240,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (gameOverEl) gameOverEl.classList.add('show');
     }
 
-    // ZOMBIE AI HELPERS
+    // ZOMBIE AI movement
     function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
     function normalize(dx, dy) {
@@ -206,30 +249,15 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateZombie(z, index) {
-        z.bobT           += 0.12;
-        z.damageCooldown  = Math.max(0, z.damageCooldown - 1);
-        z.flashT          = Math.max(0, z.flashT - 1);
-        z.wanderTimer     = Math.max(0, z.wanderTimer - 1);
+        z.damageCooldown = Math.max(0, z.damageCooldown - 1);
+        z.flashT = Math.max(0, z.flashT - 1);
 
-        const dp = dist(z, player);
-        let moveX = 0, moveY = 0;
+        // Get the direction from this zombie straight to the player
+        const toPlayer = normalize(player.x - z.x, player.y - z.y);
+        let moveX = toPlayer.x;
+        let moveY = toPlayer.y;
 
-        if (dp < z.detectionRadius) {
-            // Chase: steer directly toward player
-            const d = normalize(player.x - z.x, player.y - z.y);
-            moveX = d.x;
-            moveY = d.y;
-        } else {
-            // Wander: random direction biased rightward so zombies drift into the map
-            if (z.wanderTimer <= 0) {
-                z.wanderAngle = (Math.random() - 0.5) * (Math.PI * 0.5);
-                z.wanderTimer = 60 + Math.random() * 90;
-            }
-            moveX = Math.cos(z.wanderAngle);
-            moveY = Math.sin(z.wanderAngle);
-        }
-
-        // Separation: push away from overlapping zombies
+        // Separation: push away from overlapping zombies so they don't stack
         let sepX = 0, sepY = 0;
         for (let j = 0; j < zombies.length; j++) {
             if (j === index) continue;
@@ -242,26 +270,28 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // seperation force
         const n = normalize(moveX + sepX * 2.5, moveY + sepY * 2.5);
         z.x += n.x * z.speed;
         z.y += n.y * z.speed;
 
-        // Update facing angle for sprite rotation
+        // Rotate sprite to face the direction of movement
         if (n.x !== 0 || n.y !== 0) z.angle = Math.atan2(n.y, n.x);
 
-        // Zombies are NEVER removed for going off-screen — player must kill all of them
-
-        // Contact damage to player
-        if (dp < z.radius + player.radius && z.damageCooldown <= 0) {
+        // if in contact with player, the zombie will deal damage
+        // Only deal damage once zombie is on screen (z.x > 0)
+        const dp = dist(z, player);
+        if (z.x > 0 && dp < z.radius + player.radius && z.damageCooldown <= 0) {
             player.hp -= 10;
             z.damageCooldown = 50;
             if (player.hp <= 0) onGameOver();
         }
     }
 
-    // UPDATE
+    // UPDATE FRAMES BASED ON USER INPUT
     function update() {
         if (!gameRunning) return;
+        if (gamePaused)  return; // freeze everything while paused
 
         // Rotation
         if (keys['ArrowLeft'])  player.angle -= player.rotationSpeed;
@@ -282,7 +312,7 @@ window.addEventListener('DOMContentLoaded', () => {
         player.x = Math.max(player.radius, Math.min(canvas.width  - player.radius, player.x + dx));
         player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y + dy));
 
-        // Timed zombie spawning — only while zombies are still queued
+        //The zombie spawning timer
         if (zombiesToSpawn > 0) {
             spawnTimer++;
             if (spawnTimer >= LEVELS[currentLevel].spawnInterval) {
@@ -292,12 +322,12 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Run AI — zombies are never culled for being off-screen
+        //Zombie frame updating
         for (let i = 0; i < zombies.length; i++) {
-            updateZombie(zombies[i], i);
+            updateZombie(zombies[i], i); // Pass the zombie AND its index (needed for separation)
         }
 
-        // Bullets
+        // Bullets angle and direction calculation
         for (let i = bullets.length - 1; i >= 0; i--) {
             const b = bullets[i];
             b.x += b.dx * b.speed;
@@ -308,14 +338,15 @@ window.addEventListener('DOMContentLoaded', () => {
                 continue;
             }
 
-            if (target.alive &&
-                b.x > target.x && b.x < target.x + target.width &&
-                b.y > target.y && b.y < target.y + target.height) {
-                target.health -= 20;
-                bullets.splice(i, 1);
-                if (target.health <= 0) target.alive = false;
-                continue;
-            }
+            //test target
+            // if (target.alive &&
+            //     b.x > target.x && b.x < target.x + target.width &&
+            //     b.y > target.y && b.y < target.y + target.height) {
+            //     target.health -= 20;
+            //     bullets.splice(i, 1);
+            //     if (target.health <= 0) target.alive = false;
+            //     continue;
+            // }
 
             let hit = false;
             for (let j = zombies.length - 1; j >= 0; j--) {
@@ -336,7 +367,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if (hit) continue;
         }
 
-        // Level complete: all zombies spawned and all killed
+        // check if level is complete: all zombies for the level are killed
         if (zombiesToSpawn === 0 && zombies.length === 0 &&
             zombiesKilled === LEVELS[currentLevel].zombieCount) {
             onLevelComplete();
@@ -356,7 +387,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // DRAW
     function drawPlayer() {
-        drawSprite(SPRITES.player, player.x, player.y, player.radius, player.angle, '#cccccc');
+        // Pick the correct directional sprite based on current angle
+        const dirSprite = PLAYER_DIRS[getPlayerDirIndex(player.angle)];
+
+        // Draw flat (no canvas rotation) — the direction is baked into the PNG
+        drawSpriteFlat(dirSprite, player.x, player.y, player.radius, '#cccccc');
 
         // HP bar below the sprite
         const bw  = player.radius * 2;
@@ -365,7 +400,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const pct = player.hp / player.maxHp;
         ctx.fillStyle = '#400';
         ctx.fillRect(bx, by, bw, 5);
-        ctx.fillStyle = pct > 0.5 ? '#44ee44' : pct > 0.25 ? '#eeaa22' : '#ee3333';
+        ctx.fillStyle = pct > 0.5 ? '#44ee44' : pct > 0.25 ? '#eeaa22' : '#ee3333'; //health bar
         ctx.fillRect(bx, by, bw * pct, 5);
     }
 
@@ -378,27 +413,21 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function drawTarget() {
-        if (!target.alive) return;
-        ctx.fillStyle = 'green';
-        ctx.fillRect(target.x, target.y, target.width, target.height);
-        ctx.fillStyle = 'white';
-        ctx.font = '16px monospace';
-        ctx.fillText('HP: ' + target.health, target.x, target.y - 5);
-    }
+    // function drawTarget() {
+    //     if (!target.alive) return;
+    //     ctx.fillStyle = 'green';
+    //     ctx.fillRect(target.x, target.y, target.width, target.height);
+    //     ctx.fillStyle = 'white';
+    //     ctx.font = '16px monospace';
+    //     ctx.fillText('HP: ' + target.health, target.x, target.y - 5);
+    // }
 
     function drawZombies() {
         zombies.forEach(z => {
-            // Skip drawing if far off the visible canvas (still active in AI)
-            if (z.x < -100 || z.x > canvas.width  + 100 ||
-                z.y < -100 || z.y > canvas.height + 100) return;
-
-            const zy = z.y + Math.sin(z.bobT) * 2; // gentle float animation
-
             // White flash overlay on hit
             if (z.flashT > 0 && Math.floor(z.flashT / 2) % 2 === 0) {
                 ctx.save();
-                ctx.translate(z.x, zy);
+                ctx.translate(z.x, z.y);
                 ctx.rotate(z.angle);
                 ctx.globalAlpha = 0.55;
                 ctx.fillStyle   = '#ffffff';
@@ -407,12 +436,12 @@ window.addEventListener('DOMContentLoaded', () => {
                 ctx.globalAlpha = 1;
             }
 
-            drawSprite(SPRITES.zombie, z.x, zy, z.radius, z.angle, '#44aa44');
+            drawSprite(SPRITES.zombie, z.x, z.y, z.radius, z.angle, '#44aa44');
 
             // HP bar above sprite
             const bw = z.radius * 2;
             const bx = z.x - bw / 2;
-            const by = zy - z.radius - 10;
+            const by = z.y - z.radius - 10;
             ctx.fillStyle = '#400';
             ctx.fillRect(bx, by, bw, 4);
             ctx.fillStyle = '#22cc22';
@@ -420,50 +449,41 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Red triangle arrows on the canvas edge pointing to off-screen zombies
-    function drawOffscreenIndicators() {
-        const pad = 20;
-        zombies.forEach(z => {
-            if (z.x > -z.radius && z.x < canvas.width  + z.radius &&
-                z.y > -z.radius && z.y < canvas.height + z.radius) return;
+    // function drawSpawnEdge() {
+    //     ctx.strokeStyle = 'rgba(255,60,60,0.25)';
+    //     ctx.lineWidth   = 2;
+    //     ctx.setLineDash([8, 6]);
+    //     ctx.beginPath();
+    //     ctx.moveTo(2, 0);
+    //     ctx.lineTo(2, canvas.height);
+    //     ctx.stroke();
+    //     ctx.setLineDash([]);
+    // }
 
-            const angle = Math.atan2(z.y - canvas.height / 2, z.x - canvas.width / 2);
-            const ex = canvas.width  / 2 + Math.cos(angle) * (canvas.width  / 2 - pad);
-            const ey = canvas.height / 2 + Math.sin(angle) * (canvas.height / 2 - pad);
-
-            ctx.save();
-            ctx.translate(ex, ey);
-            ctx.rotate(angle);
-            ctx.beginPath();
-            ctx.moveTo(12, 0);
-            ctx.lineTo(-7,  7);
-            ctx.lineTo(-7, -7);
-            ctx.closePath();
-            ctx.fillStyle = 'rgba(255,68,68,0.9)';
-            ctx.fill();
-            ctx.restore();
-        });
-    }
-
-    function drawSpawnEdge() {
-        ctx.strokeStyle = 'rgba(255,60,60,0.25)';
-        ctx.lineWidth   = 2;
-        ctx.setLineDash([8, 6]);
-        ctx.beginPath();
-        ctx.moveTo(2, 0);
-        ctx.lineTo(2, canvas.height);
-        ctx.stroke();
-        ctx.setLineDash([]);
-    }
-
+    // DRAW LOOP — only call functions defined above.
+    // If you comment out a draw function, remove its call here too.
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawSpawnEdge();
-        drawTarget();
+        // drawSpawnEdge();
+        // drawTarget();
         drawZombies();
         drawPlayer();
         drawBullets();
-        drawOffscreenIndicators();
+        // drawOffscreenIndicators();
+
+        // Pause overlay — drawn on top of everything when paused
+        if (gamePaused) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 36px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2 - 10);
+            ctx.font = '16px monospace';
+            ctx.fillStyle = '#aaaaaa';
+            ctx.fillText('Press ESC to resume', canvas.width / 2, canvas.height / 2 + 24);
+            ctx.textAlign = 'left'; // reset alignment so nothing else is affected
+        }
     }
 
     // GAME LOOP

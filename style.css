@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
 *, *::before, *::after {
     box-sizing: border-box;
@@ -13,7 +12,7 @@ body {
     align-items: center;
     min-height: 100vh;
     background: #962020;
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Arial', sans-serif;
     overflow: hidden;
     user-select: none; /* stops text highlighting when pressing keys */
 }
@@ -101,12 +100,62 @@ canvas#gameCanvas {
 #nextLevelBtn {
     background: transparent;
     border: 1px solid currentColor;
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Arial', sans-serif;
     font-size: 0.9rem;
     padding: 10px 28px;
     cursor: pointer;
     letter-spacing: 0.15em;
     transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+/* PAUSE SCREEN OVERLAY */
+#pauseScreen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 20;
+    background: rgba(0, 0, 40, 0.88);
+}
+
+#pauseScreen.show {
+    display: flex;
+}
+
+#pauseScreen h2 {
+    color: #88aaff;
+    font-size: 2.8rem;
+    letter-spacing: 0.2em;
+    text-shadow: 0 0 30px rgba(100, 140, 255, 0.6);
+    animation: pulseBlue 1s ease-in-out infinite alternate;
+}
+
+#pauseScreen p {
+    color: #888;
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+}
+
+#resumeBtn {
+    background: transparent;
+    border: 1px solid #88aaff;
+    font-family: 'Arial', sans-serif;
+    font-size: 0.9rem;
+    padding: 10px 28px;
+    cursor: pointer;
+    letter-spacing: 0.15em;
+    color: #88aaff;
+    box-shadow: 0 0 12px rgba(136, 170, 255, 0.3);
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+#resumeBtn:hover {
+    background: #88aaff;
+    color: #0d0202;
+    box-shadow: 0 0 24px rgba(136, 170, 255, 0.7);
 }
 
 #restartBtn {
@@ -129,15 +178,4 @@ canvas#gameCanvas {
     background: #66ff88;
     color: #0d0202;
     box-shadow: 0 0 24px rgba(102, 255, 136, 0.7);
-}
-
-/*silly animations*/
-@keyframes pulseRed {
-    from { text-shadow: 0 0 20px #e1585866; }
-    to   { text-shadow: 0 0 60px #e15858cc; }
-}
-
-@keyframes pulseGreen {
-    from { text-shadow: 0 0 20px rgba(100, 255, 120, 0.4); }
-    to   { text-shadow: 0 0 60px rgba(100, 255, 120, 0.9); }
 }
