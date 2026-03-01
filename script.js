@@ -29,7 +29,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // SPRITE CONFIGURATION
     // Sprites face RIGHT in the image (0 degrees).
     const SPRITES = {
-        zombie: { src: 'assets/jasonRight.png', img: null, loaded: false },
+        zombie: { src: 'assets/zombie.png', img: null, loaded: false },
     };
 
     // Loads all sprites and returns a Promise that resolves when every image has either loaded or errored.
@@ -148,7 +148,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const player = {
         x:             canvas.width  / 2,
         y:             canvas.height / 2,
-        radius:        36,
+        radius:        48,
         speed:         3,
         angle:         0,
         rotationSpeed: 0.05,
@@ -199,7 +199,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const y = 30 + Math.random() * (canvas.height - 60);
         zombies.push({
             x, y,
-            radius:           20,
+            radius:           40,
             speed:            0.8 + Math.random() * 0.6,
             hp:               60,
             maxHp:            60,

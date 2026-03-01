@@ -19,7 +19,7 @@ body {
 
 canvas#gameCanvas {
     display: block;
-    border: 1px solid #333;
+    border: 1px solid #080000;
     background-color: #962020;
 }
 
@@ -40,10 +40,25 @@ canvas#gameCanvas {
 }
 
 #controls {
-    margin-top: 8px;
-    color: #c19696;
-    font-size: 0.72rem;
+    margin-top: 10px;
+    color: #ffffff;
+    font-size: 0.85rem;
     letter-spacing: 0.08em;
+}
+
+#objective {
+    position: fixed;      
+    top: 50px;              
+    left: 15px;            
+    color: #ffffff;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+
+    padding: 8px 12px;    
+    border: 2px solid #ffffff;
+    border-radius: 6px;   
+
+    background-color: rgba(0, 0, 0, 0.6); 
 }
 
 #gameOver,
