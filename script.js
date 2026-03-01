@@ -103,6 +103,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const finalScoreEl  = document.getElementById('finalScore');
     const lvlCompleteEl = document.getElementById('levelComplete');
     const lvlTitleEl    = document.getElementById('levelCompleteTitle');
+    const pauseScreenEl   = document.getElementById('pauseScreen');
+    const gameCompleteEl  = document.getElementById('gameComplete');
 
     // Only attach listeners if the buttons exist (prevents runtime errors)
     const restartBtn = document.getElementById('restartBtn');
@@ -115,6 +117,30 @@ window.addEventListener('DOMContentLoaded', () => {
     if (nextLevelBtn) nextLevelBtn.addEventListener('click', () => {
         if (lvlCompleteEl) lvlCompleteEl.classList.remove('show');
         advanceLevel();
+    });
+
+    // Resume button on the pause screen — also works with ESC
+    const resumeBtn = document.getElementById('resumeBtn');
+    if (resumeBtn) resumeBtn.addEventListener('click', () => {
+        gamePaused = false;
+        if (pauseScreenEl) pauseScreenEl.classList.remove('show');
+    });
+
+    // Game complete screen — restart starts a new game, quit closes the tab
+    const restartButton = document.getElementById('restartButton');
+    if (restartButton) restartButton.addEventListener('click', () => {
+        if (gameCompleteEl) gameCompleteEl.classList.remove('show');
+        initGame();
+    });
+
+    const quitButton = document.getElementById('quitButton');
+    if (quitButton) quitButton.addEventListener('click', () => {
+        // Hide the HUD and controls bar so nothing shows behind the overlay
+        const hud      = document.getElementById('hud');
+        const controls = document.getElementById('controls');
+        if (hud)      hud.style.display      = 'none';
+        if (controls) controls.style.display = 'none';
+        window.close(); // closes the tab — may be blocked by some browsers
     });
 
     // PLAYER
@@ -138,6 +164,7 @@ window.addEventListener('DOMContentLoaded', () => {
         // Escape toggles pause — only works when the game is actively running
         if (e.code === 'Escape' && gameRunning) {
             gamePaused = !gamePaused;
+            if (pauseScreenEl) pauseScreenEl.classList.toggle('show', gamePaused);
         }
     });
     window.addEventListener('keyup', e => { keys[e.key] = false; });
@@ -204,6 +231,8 @@ window.addEventListener('DOMContentLoaded', () => {
         //target       = { x: 450, y: 200, width: 60, height: 60, health: 100, alive: true };
         gameRunning  = true;
         gamePaused   = false;
+        if (pauseScreenEl)  pauseScreenEl.classList.remove('show');
+        if (gameCompleteEl) gameCompleteEl.classList.remove('show');
         startLevel(currentLevel);
     }
 
@@ -226,8 +255,10 @@ window.addEventListener('DOMContentLoaded', () => {
     function advanceLevel() {
         currentLevel++;
         if (currentLevel >= LEVELS.length) {
-            if (finalScoreEl) finalScoreEl.textContent = score;
-            if (gameOverEl) gameOverEl.classList.add('show');
+            // All levels beaten — show the game complete / you won screen
+            gameRunning = false;
+            if (scoreEl) scoreEl.textContent = score;
+            if (gameCompleteEl) gameCompleteEl.classList.add('show');
         } else {
             gameRunning = true;
             startLevel(currentLevel);
@@ -470,20 +501,6 @@ window.addEventListener('DOMContentLoaded', () => {
         drawPlayer();
         drawBullets();
         // drawOffscreenIndicators();
-
-        // Pause overlay — drawn on top of everything when paused
-        if (gamePaused) {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 36px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2 - 10);
-            ctx.font = '16px monospace';
-            ctx.fillStyle = '#aaaaaa';
-            ctx.fillText('Press ESC to resume', canvas.width / 2, canvas.height / 2 + 24);
-            ctx.textAlign = 'left'; // reset alignment so nothing else is affected
-        }
     }
 
     // GAME LOOP

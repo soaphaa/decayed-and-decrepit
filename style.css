@@ -139,25 +139,6 @@ canvas#gameCanvas {
     letter-spacing: 0.1em;
 }
 
-#resumeBtn {
-    background: transparent;
-    border: 1px solid #88aaff;
-    font-family: 'Arial', sans-serif;
-    font-size: 0.9rem;
-    padding: 10px 28px;
-    cursor: pointer;
-    letter-spacing: 0.15em;
-    color: #88aaff;
-    box-shadow: 0 0 12px rgba(136, 170, 255, 0.3);
-    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-}
-
-#resumeBtn:hover {
-    background: #88aaff;
-    color: #0d0202;
-    box-shadow: 0 0 24px rgba(136, 170, 255, 0.7);
-}
-
 #restartBtn {
     color: #ed4c4c;
     box-shadow: 0 0 12px rgba(237, 76, 76, 0.3);
@@ -178,4 +159,66 @@ canvas#gameCanvas {
     background: #66ff88;
     color: #0d0202;
     box-shadow: 0 0 24px rgba(102, 255, 136, 0.7);
+}
+
+/* YOU WON / GAME COMPLETE OVERLAY */
+#gameComplete {
+    display: none;
+    position: fixed;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 20;
+    background: rgba(10, 30, 10, 0.92);
+}
+
+#gameComplete.show {
+    display: flex;
+}
+
+#gameComplete h2 {
+    color: #ffdd55;
+    font-size: 3rem;
+    letter-spacing: 0.2em;
+    text-shadow: 0 0 30px rgba(255, 220, 50, 0.7);
+    animation: pulseGold 1s ease-in-out infinite alternate;
+}
+
+#gameComplete p {
+    color: #888;
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+}
+
+#restartButton,
+#quitButton {
+    background: transparent;
+    border: 1px solid currentColor;
+    font-family: 'Arial', sans-serif;
+    font-size: 0.9rem;
+    padding: 10px 28px;
+    cursor: pointer;
+    letter-spacing: 0.15em;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    color: #66ff88;
+    box-shadow: 0 0 12px rgba(102, 255, 136, 0.3);
+}
+
+#restartButton,
+#quitButton:hover {
+    background: #66ff88;
+    color: #0d0202;
+    box-shadow: 0 0 24px rgba(102, 255, 136, 0.7);
+}
+
+@keyframes pulseBlue {
+    from { text-shadow: 0 0 20px rgba(100, 140, 255, 0.4); }
+    to   { text-shadow: 0 0 60px rgba(100, 140, 255, 0.9); }
+}
+
+@keyframes pulseGold {
+    from { text-shadow: 0 0 20px rgba(255, 220, 50, 0.4); }
+    to   { text-shadow: 0 0 60px rgba(255, 220, 50, 0.9); }
 }
