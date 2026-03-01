@@ -9,12 +9,14 @@ window.addEventListener('DOMContentLoaded', () => {
     // The player sprite swaps between two PNGs based on angle:
     //   jasonRight.png  — shown when facing right (315°–360° and 0°–135°)
     //   jasonLeft.png   — shown when facing left  (135°–315°)
-    //
-    // No canvas rotation is applied — direction is baked into the image.
     // ============================================================
     const PLAYER_DIRS = [
+        //1st option character
         { src: 'assets/jasonRight.png', img: null, loaded: false },  // index 0 — right
         { src: 'assets/jasonLeft.png',  img: null, loaded: false },  // index 1 — left
+        //2nd option character
+        { src: 'assets/valerieRight.png', img: null, loaded: false },  // index 0 — right
+        { src: 'assets/valerieLeft.png',  img: null, loaded: false },  // index 1 — left
     ];
 
     // Returns 0 (right sprite) or 1 (left sprite) based on player angle.
@@ -68,16 +70,28 @@ window.addEventListener('DOMContentLoaded', () => {
     // Shows a coloured placeholder rectangle only while the image is still loading.
     function drawSprite(sprite, x, y, radius, angle, placeholderColor) {
         const size = radius * 2;
+
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(angle);
-        if (sprite.loaded && sprite.img) {
-            ctx.drawImage(sprite.img, -radius, -radius, size, size);
+
+        if (sprite.loaded && sprite.img && sprite.img.width > 0) {
+
+            const iw = sprite.img.width;
+            const ih = sprite.img.height;
+
+            // Fit image proportionally inside radius box
+            const scale = Math.min(size / iw, size / ih);
+            const w = iw * scale;
+            const h = ih * scale;
+
+            ctx.drawImage(sprite.img, -w / 2, -h / 2, w, h);
+
         } else {
-            // Temporary placeholder — disappears once the PNG loads
             ctx.fillStyle = placeholderColor;
             ctx.fillRect(-radius, -radius, size, size);
         }
+
         ctx.restore();
     }
 
@@ -193,6 +207,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // ZOMBIES
     let zombies = [];
+
 
     function spawnZombie() {
         const x = -30;
