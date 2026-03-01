@@ -1,13 +1,12 @@
-body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    margin-top: 50px;
-    
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
-
 body {
-    margin: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -16,61 +15,129 @@ body {
     background: #962020;
     font-family: 'Share Tech Mono', monospace;
     overflow: hidden;
+    user-select: none; /* stops text highlighting when pressing keys */
 }
 
 canvas#gameCanvas {
+    display: block;
     border: 1px solid #333;
     background-color: #962020;
-    display: block;
 }
 
 #hud {
-  display: flex;
-  gap: 30px;
-  margin-bottom: 8px;
-  color: #ffffff;
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
-  text-shadow: 0 0 8px #6dff6d66;
+    display: flex;
+    gap: 30px;
+    margin-bottom: 8px;
+    color: #ffffff;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 8px #6dff6d66;
 }
 
+/* Kills counter highlighted so the player can see progress at a glance */
+#killsVal,
+#totalVal {
+    color: #ffcc44;
+}
 
 #controls {
-  margin-top: 8px;
-  color: #c19696;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
+    margin-top: 8px;
+    color: #c19696;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
 }
 
-/* ── Game Over Overlay ── */
+#gameOver,
+#levelComplete {
+    display: none;
+    position: fixed;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 20;
+}
+
+#gameOver.show,
+#levelComplete.show {
+    display: flex;
+}
+
+#gameOver p,
+#levelComplete p {
+    color: #888;
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+}
+
 #gameOver {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(48, 3, 3, 0.85);
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 16px;
-  z-index: 10;
-}
-
-#gameOver.show {
-  display: flex;
+    background: rgba(48, 3, 3, 0.85);
 }
 
 #gameOver h2 {
-  font-family: Arial, sans-serif;  
-  color: #ed4c4c;
-  font-size: 3rem;
-  text-shadow: 0 0 30px #e1585888;
-  letter-spacing: 0.2em;
-  animation: pulse 1s ease-in-out infinite alternate;
+    color: #ed4c4c;
+    font-size: 3rem;
+    letter-spacing: 0.2em;
+    text-shadow: 0 0 30px #e1585888;
+    animation: pulseRed 1s ease-in-out infinite alternate;
 }
 
-#gameOver p {
-  color: #888;
-  font-size: 0.9rem;
-  letter-spacing: 0.1em;
+/*LEVEL COMPLETE OVERLAY*/
+#levelComplete {
+    background: rgba(0, 20, 0, 0.88);
 }
 
+#levelComplete h2 {
+    color: #66ff88;
+    font-size: 2.8rem;
+    letter-spacing: 0.2em;
+    text-shadow: 0 0 30px rgba(100, 255, 120, 0.6);
+    animation: pulseGreen 1s ease-in-out infinite alternate;
+}
+
+/* BUTTONS*/
+#restartBtn,
+#nextLevelBtn {
+    background: transparent;
+    border: 1px solid currentColor;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem;
+    padding: 10px 28px;
+    cursor: pointer;
+    letter-spacing: 0.15em;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+#restartBtn {
+    color: #ed4c4c;
+    box-shadow: 0 0 12px rgba(237, 76, 76, 0.3);
+}
+
+#restartBtn:hover {
+    background: #ed4c4c;
+    color: #0d0202;
+    box-shadow: 0 0 24px rgba(237, 76, 76, 0.7);
+}
+
+#nextLevelBtn {
+    color: #66ff88;
+    box-shadow: 0 0 12px rgba(102, 255, 136, 0.3);
+}
+
+#nextLevelBtn:hover {
+    background: #66ff88;
+    color: #0d0202;
+    box-shadow: 0 0 24px rgba(102, 255, 136, 0.7);
+}
+
+/*silly animations*/
+@keyframes pulseRed {
+    from { text-shadow: 0 0 20px #e1585866; }
+    to   { text-shadow: 0 0 60px #e15858cc; }
+}
+
+@keyframes pulseGreen {
+    from { text-shadow: 0 0 20px rgba(100, 255, 120, 0.4); }
+    to   { text-shadow: 0 0 60px rgba(100, 255, 120, 0.9); }
+}
