@@ -15,17 +15,24 @@ window.addEventListener('DOMContentLoaded', () => {
         { src: 'assets/jasonRight.png', img: null, loaded: false },  // index 0 — right
         { src: 'assets/jasonLeft.png',  img: null, loaded: false },  // index 1 — left
         //2nd option character
-        { src: 'assets/valerieRight.png', img: null, loaded: false },  // index 0 — right
-        { src: 'assets/valerieLeft.png',  img: null, loaded: false },  // index 1 — left
+        { src: 'assets/valerieRight.png', img: null, loaded: false },  // index 2 — right
+        { src: 'assets/valerieLeft.png',  img: null, loaded: false },  // index 3 — left
     ];
 
-    // Returns 0 (right sprite) or 1 (left sprite) based on player angle.
-    // "Left" is any angle pointing into the left half of the circle (90°–270°).
+    // Which character is active: 0 = jason (indices 0,1), 1 = valerie (indices 2,3)
+    // Change this to 1 to switch to Valerie
+    let activeCharacter = 0;
+
+    // Returns the correct PLAYER_DIRS index for the current character and angle.
+    // Each character occupies 2 consecutive entries: [rightIndex, leftIndex]
     function getPlayerDirIndex(angle) {
         // Normalise to 0–2PI so negative angles work correctly
         const normalised = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
         // PI/2 = 90°, 3*PI/2 = 270° — if between these, player faces left
-        return (normalised > Math.PI / 2 && normalised < Math.PI * 1.5) ? 1 : 0;
+        const facingLeft = normalised > Math.PI / 2 && normalised < Math.PI * 1.5;
+        // activeCharacter 0 → indices 0,1 | activeCharacter 1 → indices 2,3
+        const base = activeCharacter * 2;
+        return facingLeft ? base + 1 : base;
     }
 
     // SPRITE CONFIGURATION
@@ -51,11 +58,26 @@ window.addEventListener('DOMContentLoaded', () => {
         return Promise.all(jobs);
     }
 
-    // Draws a player sprite — no rotation, direction is baked into the PNG
-    function drawSpriteFlat(sprite, x, y, radius, placeholderColor) {
+    // Draws a player sprite with a visible skew tilt based on angle.
+    // The correct left/right PNG is chosen by drawPlayer before calling this.
+    // angle is used here to apply a horizontal skew so rotation is visible.
+    function drawSpriteFlat(sprite, x, y, radius, placeholderColor, angle) {
         const size = radius * 2;
+
+        // Normalise to 0–2PI so negative angles work correctly
+        const norm = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+
+        // Math.sin goes -1→0→1→0→-1 as the angle goes 0→90→180→270→360
+        // This gives a smooth lean forward when rotating down, back when rotating up
+        const lean = Math.sin(norm);
+        const skewAmount = lean * 0.25; // 0.25 = max tilt — increase for more dramatic lean
+
         ctx.save();
         ctx.translate(x, y);
+        // ctx.transform(scaleX, skewY, skewX, scaleY, translateX, translateY)
+        // skewX (3rd param) tilts left/right columns up and down
+        ctx.transform(1, 0, skewAmount, 1, 0, 0);
+
         if (sprite.loaded && sprite.img) {
             ctx.drawImage(sprite.img, -radius, -radius, size, size);
         } else {
@@ -63,6 +85,7 @@ window.addEventListener('DOMContentLoaded', () => {
             ctx.fillStyle = placeholderColor;
             ctx.fillRect(-radius, -radius, size, size);
         }
+
         ctx.restore();
     }
 
@@ -132,6 +155,20 @@ window.addEventListener('DOMContentLoaded', () => {
         if (lvlCompleteEl) lvlCompleteEl.classList.remove('show');
         advanceLevel();
     });
+
+    document.getElementById('JasonButton').addEventListener('click', () => {
+        player.character = 'Jason';
+        if (characterSelectionEl) characterSelectionEl.classList.remove('show');
+        initGame();
+    });
+
+
+    document.getElementById('ValerieButton').addEventListener('click', () => {
+        player.character = 'Valerie';
+        if (characterSelectionEl) characterSelectionEl.classList.remove('show');
+        initGame();
+    });
+
 
     // Resume button on the pause screen — also works with ESC
     const resumeBtn = document.getElementById('resumeBtn');
@@ -214,7 +251,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const y = 30 + Math.random() * (canvas.height - 60);
         zombies.push({
             x, y,
-            radius:           40,
+            radius:           48,
             speed:            0.8 + Math.random() * 0.6,
             hp:               60,
             maxHp:            60,
@@ -433,11 +470,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // DRAW
     function drawPlayer() {
-        // Pick the correct directional sprite based on current angle
+        // Pick the correct directional sprite based on current character and angle
         const dirSprite = PLAYER_DIRS[getPlayerDirIndex(player.angle)];
 
-        // Draw flat (no canvas rotation) — the direction is baked into the PNG
-        drawSpriteFlat(dirSprite, player.x, player.y, player.radius, '#cccccc');
+        // Pass player.angle so drawSpriteFlat can apply the skew tilt
+        drawSpriteFlat(dirSprite, player.x, player.y, player.radius, '#cccccc', player.angle);
 
         // HP bar below the sprite
         const bw  = player.radius * 2;
