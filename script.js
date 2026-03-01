@@ -33,11 +33,12 @@ window.addEventListener('DOMContentLoaded', () => {
         player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y + dy));
     }
 
+    //sprite
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.beginPath();
         ctx.arc(player.x, player.y, player.radius, 0, 2 * Math.PI);
-        ctx.fillStyle = 'red';
+        ctx.fillStyle = 'white';
         ctx.fill();
     }
 

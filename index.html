@@ -7,7 +7,23 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
     <script src="script.js"></script>
+
+    <div id="hud">
+        <span>HP: <span id="hpVal">100</span></span>
+        <span>ZOMBIES: <span id="zombieCount">0</span></span>
+        <span>WAVE: <span id="waveVal">1</span></span>
+        <span>SCORE: <span id="scoreVal">0</span></span>
+    </div>
+
+    <div id="controls">WASD / ARROW KEYS — move &nbsp;|&nbsp; SPACE — attack</div>
+
+    <div id="gameOver">
+        <h2>YOU DIED</h2>
+        <p>SCORE: <span id="finalScore">0</span></p>
+        <button id="restartBtn">PLAY AGAIN</button>
+    </div>
+
 </body>
 </html>
