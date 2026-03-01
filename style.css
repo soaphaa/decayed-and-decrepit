@@ -22,7 +22,6 @@ canvas#gameCanvas {
     border: 1px solid #333;
     background-color: #962020;
     display: block;
-    box-shadow: 0 0 40px #6dff6d22, inset 0 0 80px #00000088;
 }
 
 #hud {
@@ -43,4 +42,35 @@ canvas#gameCanvas {
   letter-spacing: 0.08em;
 }
 
+/* ── Game Over Overlay ── */
+#gameOver {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(48, 3, 3, 0.85);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 10;
+}
+
+#gameOver.show {
+  display: flex;
+}
+
+#gameOver h2 {
+  font-family: Arial, sans-serif;  
+  color: #ed4c4c;
+  font-size: 3rem;
+  text-shadow: 0 0 30px #e1585888;
+  letter-spacing: 0.2em;
+  animation: pulse 1s ease-in-out infinite alternate;
+}
+
+#gameOver p {
+  color: #888;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+}
 
