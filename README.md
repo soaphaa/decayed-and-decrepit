@@ -33,7 +33,3 @@ A 24hr Hackathon Organized by Hack Club that I was able to attend! The theme was
 ## Credits
 All Art made by me and my other CF Hackathon team members
 The name and backstory is inspired by the Minecraft Roleplay series, Decayed and Decrepit. Amazing series, go check it out!
-
-- Game concept and design by *(Your Name / Team Name)*
-- Graphics and sprites *(if applicable)*
-- Zombie AI, game mechanics, and UI implemented in HTML/CSS/JS
