@@ -2,6 +2,7 @@
 
 **Dead and Decayed** is a top-down zombie survival game set in the post-apocalyptic Paradise City. A viral outbreak has turned the population into zombies, and the remaining survivors are forced to hide underground. You play as a scavenger who was selected to go out of the bunker you've been in sheltering in for several months, venturing out to collect resources before your bunker runs out of supplies.
 
+Playable link: https://sluo1.itch.io/dead-and-decayed-pt1 
 ---
 
 ## Gameplay Features
